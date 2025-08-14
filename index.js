@@ -5,8 +5,7 @@ import cors from 'cors';
 const app = express();
 app.use(cors());
 
-const API_DIRECT = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau';
-const PROXY = 'https://api.codetabs.com/v1/proxy/?quest=';
+const API_URL = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau';
 
 // Pattern lưu tối đa 20 kết quả gần nhất
 let patternHistory = "";
@@ -61,53 +60,30 @@ function updatePatternHistory(char) {
   patternHistory += char;
 }
 
-// Hàm fetch API (có fallback sang proxy)
-async function fetchDataWithFallback() {
-  let url = API_DIRECT;
-  let useProxy = false;
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
-          "Accept": "application/json, text/plain, */*",
-          "Referer": "https://taixiu1.gsum01.com/",
-          "Origin": "https://taixiu1.gsum01.com"
-        }
-      });
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const rawData = await response.text();
-      let data;
-      try {
-        data = JSON.parse(rawData);
-      } catch {
-        throw new Error("Not JSON");
-      }
-
-      if (!Array.isArray(data) || data.length === 0) {
-        throw new Error("Empty data");
-      }
-
-      return data; // Thành công
-    } catch (err) {
-      if (!useProxy) {
-        console.warn(`⚠️ Lỗi gọi trực tiếp: ${err.message} → thử dùng proxy`);
-        url = PROXY + encodeURIComponent(API_DIRECT);
-        useProxy = true;
-      } else {
-        throw err;
-      }
-    }
-  }
-}
-
 // API chính
 app.get('/api/taixiu/lucky', async (req, res) => {
   try {
-    const data = await fetchDataWithFallback();
+    const response = await fetch(API_URL);
+
+    // Kiểm tra content-type
+    const contentType = response.headers.get("content-type") || "";
+    const rawData = await response.text(); // Lấy dạng text
+
+    if (!contentType.includes("application/json")) {
+      console.error("❌ API trả về HTML hoặc không phải JSON:", rawData.slice(0, 200));
+      return res.status(502).json({
+        error: "API gốc không trả JSON",
+        preview: rawData.slice(0, 200) // Gửi trước 200 ký tự để debug
+      });
+    }
+
+    // Parse JSON
+    const data = JSON.parse(rawData);
+
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(500).json({ error: 'Không có dữ liệu từ API gốc' });
+    }
+
     const sorted = data.sort((a, b) => b.SessionId - a.SessionId);
     const latest = sorted[0];
 
