@@ -5,8 +5,7 @@ import cors from 'cors';
 const app = express();
 app.use(cors());
 
-// Corrected API URL that returns JSON
-const API_URL = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau?_t=1723223806935';
+const API_URL = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau';
 
 // Pattern lưu tối đa 20 kết quả gần nhất
 let patternHistory = "";
@@ -65,21 +64,7 @@ function updatePatternHistory(char) {
 app.get('/api/taixiu/lucky', async (req, res) => {
   try {
     const response = await fetch(API_URL);
-
-    // Kiểm tra content-type
-    const contentType = response.headers.get("content-type") || "";
-    const rawData = await response.text(); // Lấy dạng text
-
-    if (!contentType.includes("application/json")) {
-      console.error("❌ API trả về HTML hoặc không phải JSON:", rawData.slice(0, 200));
-      return res.status(502).json({
-        error: "API gốc không trả JSON",
-        preview: rawData.slice(0, 200)
-      });
-    }
-
-    // Parse JSON
-    const data = JSON.parse(rawData);
+    const data = await response.json(); // ✅ Lấy JSON trực tiếp
 
     if (!Array.isArray(data) || data.length === 0) {
       return res.status(500).json({ error: 'Không có dữ liệu từ API gốc' });
@@ -112,7 +97,8 @@ app.get('/api/taixiu/lucky', async (req, res) => {
       Ket_qua: ket_qua,
       Pattern: patternHistory,
       Du_doan: du_doan,
-      MD5: latest.MD5Key || ""
+      MD5Key: latest.MD5Key || "",
+      MD5: latest.MD5 || ""
     });
 
   } catch (error) {
