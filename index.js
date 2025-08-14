@@ -16,7 +16,13 @@ function getTaiXiu(sum) {
 app.get('/api/taixiu/simple-result', async (req, res) => {
   try {
     // Get data from source API
-    const response = await axios.get(API_URL);
+    const response = await axios.get(API_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json'
+      }
+    });
+
     const data = response.data;
 
     if (!Array.isArray(data) || data.length === 0) {
@@ -25,7 +31,7 @@ app.get('/api/taixiu/simple-result', async (req, res) => {
 
     // Get latest result
     const latest = data.sort((a, b) => b.SessionId - a.SessionId)[0];
-    const sum = latest.DiceSum || latest.FirstDice + latest.SecondDice + latest.ThirdDice;
+    const sum = latest.DiceSum || (latest.FirstDice + latest.SecondDice + latest.ThirdDice);
     
     // Return simplified response
     res.json({
@@ -50,3 +56,4 @@ app.get('/api/taixiu/simple-result', async (req, res) => {
 const PORT = process.env.PORT || 4002;
 app.listen(PORT, () => {
   console.log(`✅ Simple result server running on http://localhost:${PORT}`);
+});
