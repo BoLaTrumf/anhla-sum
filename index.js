@@ -49,5 +49,4 @@ app.get('/api/taixiu/simple-result', async (req, res) => {
 // Start server
 const PORT = process.env.PORT || 4002;
 app.listen(PORT, () => {
-  console.log(✅ Simple result server running on http://localhost:${PORT});
-});
+  console.log(`✅ Simple result server running on http://localhost:${PORT}`);
