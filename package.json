@@ -1,7 +1,7 @@
 {
   "name": "taixiu-simple-api",
   "version": "1.0.0",
-  "description": "API đơn giản lấy kết quả Tài/Xỉu từ nguồn taixiu1.gsum01.com",
+  "description": "API đơn giản lấy kết quả Tài/Xỉu từ nguồn taixiu1.gsum01.com, có bypass 403",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
