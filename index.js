@@ -5,7 +5,8 @@ import cors from 'cors';
 const app = express();
 app.use(cors());
 
-const API_URL = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau';
+// Corrected API URL that returns JSON
+const API_URL = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau?_t=1723223806935';
 
 // Pattern lưu tối đa 20 kết quả gần nhất
 let patternHistory = "";
@@ -73,7 +74,7 @@ app.get('/api/taixiu/lucky', async (req, res) => {
       console.error("❌ API trả về HTML hoặc không phải JSON:", rawData.slice(0, 200));
       return res.status(502).json({
         error: "API gốc không trả JSON",
-        preview: rawData.slice(0, 200) // Gửi trước 200 ký tự để debug
+        preview: rawData.slice(0, 200)
       });
     }
 
