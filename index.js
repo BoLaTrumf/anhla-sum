@@ -65,20 +65,20 @@ app.get('/api/taixiu/lucky', async (req, res) => {
   try {
     const response = await fetch(API_URL, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
         'Referer': 'https://taixiu1.gsum01.com/',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     });
 
     const rawData = await response.text();
-
-    // Thử parse JSON
     let data;
+
     try {
       data = JSON.parse(rawData);
     } catch (err) {
-      console.error("❌ API trả HTML hoặc lỗi JSON:", rawData.slice(0, 200));
       return res.status(502).json({
         error: "API gốc không trả JSON hợp lệ",
         preview: rawData.slice(0, 200)
@@ -89,11 +89,10 @@ app.get('/api/taixiu/lucky', async (req, res) => {
       return res.status(500).json({ error: 'Không có dữ liệu từ API gốc' });
     }
 
+    // Xử lý dữ liệu
     const sorted = data.sort((a, b) => b.SessionId - a.SessionId);
     const latest = sorted[0];
-
-    const dice = [latest.FirstDice, latest.SecondDice, latest.ThirdDice];
-    const sum = latest.DiceSum || dice.reduce((a, b) => a + b, 0);
+    const sum = latest.DiceSum || (latest.FirstDice + latest.SecondDice + latest.ThirdDice);
     const ket_qua = getTaiXiu(sum);
     const patternChar = ket_qua === "Tài" ? "t" : "x";
 
@@ -102,6 +101,7 @@ app.get('/api/taixiu/lucky', async (req, res) => {
     const historyPatternArray = sorted.map(i => getTaiXiu(i.DiceSum) === 'Tài' ? 't' : 'x').reverse();
     const markov = predictMarkov(historyPatternArray);
     const npattern = predictNPattern(historyPatternArray);
+
     const du_doan = markov === npattern
       ? (markov === 't' ? "Tài" : "Xỉu")
       : (npattern === 't' ? "Tài" : "Xỉu");
@@ -120,7 +120,6 @@ app.get('/api/taixiu/lucky', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Lỗi fetch hoặc xử lý:', error.message);
     res.status(500).json({ error: 'Lỗi nội bộ máy chủ', details: error.message });
   }
 });
