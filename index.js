@@ -63,8 +63,27 @@ function updatePatternHistory(char) {
 // API chính
 app.get('/api/taixiu/lucky', async (req, res) => {
   try {
-    const response = await fetch(API_URL);
-    const data = await response.json(); // ✅ Lấy JSON trực tiếp
+    const response = await fetch(API_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Referer': 'https://taixiu1.gsum01.com/',
+      }
+    });
+
+    const rawData = await response.text();
+
+    // Thử parse JSON
+    let data;
+    try {
+      data = JSON.parse(rawData);
+    } catch (err) {
+      console.error("❌ API trả HTML hoặc lỗi JSON:", rawData.slice(0, 200));
+      return res.status(502).json({
+        error: "API gốc không trả JSON hợp lệ",
+        preview: rawData.slice(0, 200)
+      });
+    }
 
     if (!Array.isArray(data) || data.length === 0) {
       return res.status(500).json({ error: 'Không có dữ liệu từ API gốc' });
@@ -97,8 +116,7 @@ app.get('/api/taixiu/lucky', async (req, res) => {
       Ket_qua: ket_qua,
       Pattern: patternHistory,
       Du_doan: du_doan,
-      MD5Key: latest.MD5Key || "",
-      MD5: latest.MD5 || ""
+      MD5: latest.MD5Key || ""
     });
 
   } catch (error) {
