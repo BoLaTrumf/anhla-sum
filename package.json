@@ -1,15 +1,13 @@
 {
-  "name": "taixiu-proxy",
+  "name": "taixiu-api",
   "version": "1.0.0",
-  "description": "Proxy API lấy dữ liệu Tài Xỉu từ taixiu1.gsum01.com",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "node-fetch": "^3.3.2",
-    "cors": "^2.8.5"
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   }
 }
