@@ -63,22 +63,30 @@ function updatePatternHistory(char) {
 // API chính
 app.get('/api/taixiu/lucky', async (req, res) => {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://taixiu1.gsum01.com/",
+        "Origin": "https://taixiu1.gsum01.com"
+      }
+    });
 
-    // Kiểm tra content-type
-    const contentType = response.headers.get("content-type") || "";
-    const rawData = await response.text(); // Lấy dạng text
-
-    if (!contentType.includes("application/json")) {
-      console.error("❌ API trả về HTML hoặc không phải JSON:", rawData.slice(0, 200));
-      return res.status(502).json({
-        error: "API gốc không trả JSON",
-        preview: rawData.slice(0, 200) // Gửi trước 200 ký tự để debug
-      });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    // Parse JSON
-    const data = JSON.parse(rawData);
+    const rawData = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(rawData);
+    } catch {
+      return res.status(502).json({
+        error: "Không parse được JSON",
+        preview: rawData.slice(0, 200)
+      });
+    }
 
     if (!Array.isArray(data) || data.length === 0) {
       return res.status(500).json({ error: 'Không có dữ liệu từ API gốc' });
