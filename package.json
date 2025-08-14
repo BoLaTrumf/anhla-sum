@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "API dự đoán Tài Xỉu từ Lottery MD5",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
