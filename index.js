@@ -13,7 +13,7 @@ function getTaiXiu(sum) {
 }
 
 // Simplified API endpoint
-app.get('/api/taixiu/simple-result', async (req, res) => {
+app.get('/api', async (req, res) => {
   try {
     // Get data from source API
     const response = await axios.get(API_URL);
