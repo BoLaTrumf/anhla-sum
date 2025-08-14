@@ -1,61 +1,53 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
+const express = require('express');
+const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
 app.use(cors());
 
-const MAIN_API = "https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau";
-const BACKUP_APIS = [
-    `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(MAIN_API)}`,
-    `https://cors-anywhere.herokuapp.com/${MAIN_API}`
-];
+const API_URL = 'https://taixiu1.gsum01.com/api/luckydice1/GetSoiCau';
 
-async function fetchWithBypass(url) {
-    const res = await fetch(url, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Accept": "application/json,text/plain,*/*",
-            "Accept-Language": "en-US,en;q=0.9"
-        }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+// Helper function
+function getTaiXiu(sum) {
+  return sum >= 11 ? 'Tài' : 'Xỉu';
 }
 
-app.get("/data", async (req, res) => {
-    try {
-        // Thử API chính
-        try {
-            const data = await fetchWithBypass(MAIN_API);
-            return res.json(data);
-        } catch (e) {
-            console.warn("⚠ API chính lỗi:", e.message);
-        }
+// Simplified API endpoint
+app.get('/api/taixiu/simple-result', async (req, res) => {
+  try {
+    // Get data from source API
+    const response = await axios.get(API_URL);
+    const data = response.data;
 
-        // Thử backup
-        for (const proxyUrl of BACKUP_APIS) {
-            try {
-                const data = await fetchWithBypass(proxyUrl);
-                return res.json(data);
-            } catch (e) {
-                console.warn(`⚠ Proxy lỗi (${proxyUrl}):`, e.message);
-            }
-        }
-
-        // Nếu tất cả thất bại
-        res.status(500).json({
-            error: "Không thể lấy dữ liệu từ API gốc và proxy",
-        });
-
-    } catch (err) {
-        res.status(500).json({
-            error: "Lỗi không xác định",
-            details: err.message
-        });
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(500).json({ error: 'Invalid data from source API' });
     }
+
+    // Get latest result
+    const latest = data.sort((a, b) => b.SessionId - a.SessionId)[0];
+    const sum = latest.DiceSum || latest.FirstDice + latest.SecondDice + latest.ThirdDice;
+    
+    // Return simplified response
+    res.json({
+      Phien: latest.SessionId,
+      Xuc_xac_1: latest.FirstDice,
+      Xuc_xac_2: latest.SecondDice,
+      Xuc_xac_3: latest.ThirdDice,
+      Tong: sum,
+      Ket_qua: getTaiXiu(sum)
+    });
+
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
 });
 
-app.listen(3000, () => {
-    console.log("✅ Server chạy tại http://localhost:3000/data");
+// Start server
+const PORT = process.env.PORT || 8003;
+app.listen(PORT, () => {
+  console.log(`✅ Simple result server running on http://localhost:${PORT}`);
 });
